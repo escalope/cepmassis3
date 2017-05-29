@@ -35,6 +35,14 @@ public class Person {
 		this.timestamp = timestap;
 	}
 
+	public PersonPart[] getComponents() {
+		return components;
+	}
+
+	public void setComponents(PersonPart[] components) {
+		this.components = components;
+	}
+
 	
 	
 	

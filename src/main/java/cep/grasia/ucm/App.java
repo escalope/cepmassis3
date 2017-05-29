@@ -16,9 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 class MyListener implements UpdateListener {
     public void update(EventBean[] newEvents, EventBean[] oldEvents) {
-        EventBean event = newEvents[0];
-        System.err.println("ya");
-        System.out.println("avg=" + event.get("avg(timestamp)"));
+        EventBean event = newEvents[0];        
+        System.out.println("entityStuck=" + event.get("entityId"));
     }
 }
 public class App 
@@ -26,10 +25,19 @@ public class App
     public static void main( String[] args )
     {
     	final EPServiceProvider epService = EPServiceProviderManager.getDefaultProvider();
-    	String expression = "select avg(timestamp) from cep.grasia.ucm.Person.win:time(2 sec)";
-    	EPStatement statement = epService.getEPAdministrator().createEPL(expression);
+    	// the person is stuck if during 20 seconds, the person has not moved from its location
+    	String peoplestuck = "select * from cep.grasia.ucm.Person.win:time(20 sec) as person1 where "
+    			+ "0.5 > all "
+    			+ "(select avedev(components[0].data.x) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)"
+    			+" and 0.5> all "
+    			+ "(select avedev(components[0].data.y) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)"
+    			+" and 0.5> all "
+    			+ "(select avedev(components[0].data.z) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)";
+    	    	    
+    	EPStatement statement = epService.getEPAdministrator().createEPL(peoplestuck);
     	MyListener listener = new MyListener();
     	statement.addListener(listener);
+    	
     	new Thread(){
     		public void run(){    			
     			ObjectMapper mapper = new ObjectMapper();    			
@@ -44,18 +52,16 @@ public class App
 	    			while ((inputStr = streamReader.readLine()) != null){
 	    				if (inputStr.startsWith("data:")) {    			    				
 	    			     Person[] staff = mapper.readValue(inputStr.substring("data:".length()).getBytes(), 
-	    			    		 Person[].class);
-	    			     epService.getEPRuntime().sendEvent(staff[0]);
+	    			    		 Person[].class);	    
+	    			     for (Person person : staff)
+	    			    	 epService.getEPRuntime().sendEvent(person);
 	    				}
 	    			}
 				} catch (UnsupportedEncodingException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} 
     			
