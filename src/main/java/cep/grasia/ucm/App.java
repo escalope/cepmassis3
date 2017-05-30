@@ -16,8 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 class MyListener implements UpdateListener {
     public void update(EventBean[] newEvents, EventBean[] oldEvents) {
-        EventBean event = newEvents[0];        
-        System.out.println("entityStuck=" + event.get("entityId"));
+		EventBean event = newEvents[0];
+        System.out.println("Number Object=" + newEvents.length + " - entity=" + event.get("entityId") + " - entityType=" + event.get("changeType"));
     }
 }
 public class App 
@@ -26,13 +26,13 @@ public class App
     {
     	final EPServiceProvider epService = EPServiceProviderManager.getDefaultProvider();
     	// the person is stuck if during 20 seconds, the person has not moved from its location
-    	String peoplestuck = "select * from cep.grasia.ucm.Person.win:time(20 sec) as person1 where "
-    			+ "0.5 > all "
-    			+ "(select avedev(components[0].data.x) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)"
-    			+" and 0.5> all "
-    			+ "(select avedev(components[0].data.y) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)"
-    			+" and 0.5> all "
-    			+ "(select avedev(components[0].data.z) from cep.grasia.ucm.Person.win:time(10 sec) as person2 where person1.entityId=person2.entityId)";
+    	String peoplestuck = " select * from cep.grasia.ucm.Person.win:time(20 sec) as person1  where "
+    			+ " 0.5 > all "
+    			+ " (select avedev(components[0].data.x) from cep.grasia.ucm.Person.win:time(20 sec) as person2 where person1.entityId=person2.entityId) "
+    			+ " and 0.5 > all "
+    			+ " (select avedev(components[0].data.y) from cep.grasia.ucm.Person.win:time(20 sec) as person2 where person1.entityId=person2.entityId) "
+    			+ " and 0.5 > all "
+    			+ " (select avedev(components[0].data.z) from cep.grasia.ucm.Person.win:time(20 sec) as person2 where person1.entityId=person2.entityId) ";
     	    	    
     	EPStatement statement = epService.getEPAdministrator().createEPL(peoplestuck);
     	MyListener listener = new MyListener();
@@ -45,7 +45,7 @@ public class App
 				try {
 					streamReader = new BufferedReader(
 							new InputStreamReader(
-									new URL("http://147.96.80.41:8080/live/1/changes?components=position&type=human").openConnection().getInputStream(), 
+									new URL("http://147.96.80.41:8080/live/1/changes?components=position&type=Human").openConnection().getInputStream(),
 									"UTF-8"));
 					StringBuilder responseStrBuilder = new StringBuilder();    			
 	    			String inputStr;
